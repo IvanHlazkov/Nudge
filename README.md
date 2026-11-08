@@ -32,7 +32,7 @@ Requires macOS 14 Sonoma or later.
 2. Click the Nudge target › **Signing & Capabilities** and pick your Team (a free Apple ID works).
 3. Press **⌘R**.
 
-To make a public download, push a tag (for example `git tag v1.0 && git push --tags`). GitHub Actions builds the app and attaches `Nudge-mac.zip` to a new release.
+To make a new public download, create a release on GitHub (Releases › Draft a new release, tag `v1.1`, Publish). GitHub Actions builds the app and attaches `Nudge-mac.zip` to it in a few minutes.
 
 ## Support Nudge
 
