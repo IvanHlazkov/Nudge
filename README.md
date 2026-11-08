@@ -32,8 +32,6 @@ Requires macOS 14 Sonoma or later.
 2. Click the Nudge target › **Signing & Capabilities** and pick your Team (a free Apple ID works).
 3. Press **⌘R**.
 
-To make a new public download, create a release on GitHub (Releases › Draft a new release, tag `v1.1`, Publish). GitHub Actions builds the app and attaches `Nudge-mac.zip` to it in a few minutes.
-
 ## Support Nudge
 
 Nudge is free. If you like it, you can support its development with the **Sponsor** button at the top of this page.
