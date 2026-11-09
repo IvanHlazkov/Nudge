@@ -2,12 +2,13 @@ import SwiftUI
 
 struct MainView: View {
     @EnvironmentObject var store: ReminderStore
+    @EnvironmentObject var notes: NoteStore
     @EnvironmentObject var prefs: Prefs
     @EnvironmentObject var ui: UIState
     @State private var text = ""
 
     private var parsed: ParsedInput {
-        DateParser.parse(text, enabled: prefs.spotDates)
+        DateParser.parse(text, enabled: prefs.spotDates && !ui.noteMode)
     }
 
     var body: some View {
@@ -15,7 +16,13 @@ struct MainView: View {
             header
             quickAdd
             HStack(spacing: 14) {
-                ReminderCard(kind: .general, offset: .constant(0))
+                Group {
+                    if ui.leftTab == .notes {
+                        NotesCard()
+                    } else {
+                        ReminderCard(kind: .general, offset: .constant(0))
+                    }
+                }
                 ReminderCard(kind: .planned, offset: $ui.plannedOffset)
             }
         }
@@ -39,8 +46,8 @@ struct MainView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Circle().fill(Theme.green).frame(width: 7, height: 7)
-                        Text("Sending to Reminders")
-                        Image(systemName: "arrow.up.right")
+                        Text("Synced with Reminders")
+                        Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 10, weight: .bold))
                     }
                     .font(.system(size: 12, weight: .medium))
@@ -50,7 +57,7 @@ struct MainView: View {
                     .background(Capsule().fill(Color.white.opacity(0.08)))
                 }
                 .buttonStyle(.plain)
-                .help("New reminders are copied to Apple Reminders")
+                .help("Your reminders stay in sync with Apple Reminders")
             }
             Button {
                 ui.showSettings = true
@@ -64,12 +71,28 @@ struct MainView: View {
     }
 
     private var quickAdd: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
+            Button {
+                ui.noteMode.toggle()
+                ui.focusToken += 1
+            } label: {
+                Image(systemName: ui.noteMode ? "note.text" : "bell")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(ui.noteMode ? Theme.accent : Theme.secondary)
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(ui.noteMode ? "Writing a note · Tab for a reminder" : "Writing a reminder · Tab for a note")
+            .accessibilityLabel(ui.noteMode ? "Switch to reminder" : "Switch to note")
+
             QuickAddField(text: $text,
                           focusToken: ui.focusToken,
-                          highlight: parsed.range,
-                          onSubmit: submit)
-            Text("↵ " + hint)
+                          highlight: ui.noteMode ? nil : parsed.range,
+                          noteMode: ui.noteMode,
+                          onSubmit: submit,
+                          onTab: { ui.noteMode.toggle() })
+            Text(hint)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color(white: 0.9))
                 .lineLimit(1)
@@ -81,17 +104,33 @@ struct MainView: View {
     }
 
     private var hint: String {
-        if text.trimmingCharacters(in: .whitespaces).isEmpty { return "Press enter to save" }
+        if text.trimmingCharacters(in: .whitespaces).isEmpty {
+            return ui.noteMode ? "⇥ Tab for a reminder" : "⇥ Tab for a note"
+        }
+        if ui.noteMode { return "↵ Save to Notes" }
+        return "↵ " + reminderHint
+    }
+
+    private var reminderHint: String {
         if let due = parsed.due {
-            return "Save to Planned · \(Fmt.dayLabel(due)), \(Fmt.time(due, use24h: prefs.use24h))"
+            let repeats = parsed.repeats.map { " · " + $0.label.lowercased() } ?? ""
+            return "Save to Planned · \(Fmt.dayLabel(due)), \(Fmt.time(due, use24h: prefs.use24h))" + repeats
         }
         return "Save to General"
     }
 
     private func submit() {
+        if ui.noteMode {
+            guard notes.add(text) != nil else { return }
+            ui.leftTab = .notes
+            text = ""
+            return
+        }
         guard let added = store.quickAdd(text, spotDates: prefs.spotDates, generalDay: store.today) else { return }
         if added.kind == .planned {
             ui.plannedOffset = store.offset(of: added.day)
+        } else {
+            ui.leftTab = .general
         }
         text = ""
     }

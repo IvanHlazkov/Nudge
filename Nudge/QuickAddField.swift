@@ -5,7 +5,9 @@ struct QuickAddField: NSViewRepresentable {
     @Binding var text: String
     var focusToken: Int
     var highlight: NSRange?
+    var noteMode = false
     var onSubmit: () -> Void
+    var onTab: () -> Void = {}
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -20,8 +22,9 @@ struct QuickAddField: NSViewRepresentable {
         field.lineBreakMode = .byClipping
         field.cell?.wraps = false
         field.cell?.isScrollable = true
-        field.placeholderAttributedString = Self.placeholder
+        field.placeholderAttributedString = noteMode ? Self.notePlaceholder : Self.placeholder
         field.delegate = context.coordinator
+        context.coordinator.lastNoteMode = noteMode
         field.setAccessibilityLabel("New reminder")
         context.coordinator.lastFocusToken = focusToken
         return field
@@ -33,6 +36,12 @@ struct QuickAddField: NSViewRepresentable {
             field.stringValue = text
         }
         context.coordinator.applyHighlight(to: field)
+        if context.coordinator.lastNoteMode != noteMode {
+            context.coordinator.lastNoteMode = noteMode
+            field.placeholderAttributedString = noteMode ? Self.notePlaceholder : Self.placeholder
+            field.setAccessibilityLabel(noteMode ? "New note" : "New reminder")
+            field.needsDisplay = true
+        }
 
         if context.coordinator.lastFocusToken != focusToken {
             context.coordinator.lastFocusToken = focusToken
@@ -53,9 +62,15 @@ struct QuickAddField: NSViewRepresentable {
         return result
     }
 
+    private static var notePlaceholder: NSAttributedString {
+        NSAttributedString(string: "Jot down a quick note…",
+                           attributes: [.font: NSFont.systemFont(ofSize: 14), .foregroundColor: Theme.nsPlaceholder])
+    }
+
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: QuickAddField
         var lastFocusToken = 0
+        var lastNoteMode = false
 
         init(_ parent: QuickAddField) {
             self.parent = parent
@@ -69,6 +84,10 @@ struct QuickAddField: NSViewRepresentable {
         func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
             if selector == #selector(NSResponder.insertNewline(_:)) {
                 parent.onSubmit()
+                return true
+            }
+            if selector == #selector(NSResponder.insertTab(_:)) || selector == #selector(NSResponder.insertBacktab(_:)) {
+                parent.onTab()
                 return true
             }
             if selector == #selector(NSResponder.cancelOperation(_:)) {
