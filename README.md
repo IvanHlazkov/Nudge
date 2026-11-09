@@ -6,23 +6,19 @@
   <a href="https://github.com/IvanHlazkov/Nudge/releases/latest"><b>⬇️ Download Nudge for Mac</b></a>
 </p>
 
-<p align="center">
-  🔒 <b>Nudge 2.0 is ready and unlocks at 100 ⭐.</b> It brings two-way sync with Apple Reminders (so your iPhone too), repeating reminders and more.<br>
-  Star the repo to help unlock it. It releases automatically when we hit 100.<br><br>
-  <img src="https://img.shields.io/github/stars/IvanHlazkov/Nudge?style=social" alt="GitHub stars">
-</p>
-
 ---
 
 Nudge is a small glass panel that pops up with ⌥Space. Type a reminder, press Enter, done.
 
 - **Type naturally:** "Upload homework tomorrow at 10 pm", "gym at 18:30" or "call back in 20 minutes". The date lights up as you type.
+- **Repeating reminders:** "water the plants every day at 8", "team call every monday at 10", "pay rent monthly". Tick one off and the next one appears.
+- **Two-way sync with Apple Reminders** (optional): your reminders show up on your iPhone, Apple Watch and Siri, and anything you change or tick off there comes back to Nudge.
 - **General and Planned:** reminders without a time go to General (one simple list), ones with a time go to Planned (day by day).
-- **Edit anything:** double-click a reminder (or use the pencil) to change its text, date and time.
-- **Notifications** with Snooze and Mark done buttons, plus a 9:00 morning summary.
+- **Edit anything:** double-click a reminder (or use the pencil) to change its text, date, time and repeat.
+- **Notifications** with Mark done and Snooze (10 min, 1 hour or tomorrow) buttons, plus a 9:00 morning summary.
 - **⌥Space** opens and closes Nudge from any app. Click anywhere outside it and it gets out of the way.
-- **Menu bar bell** shows what's next up.
-- **Send to Apple Reminders** (optional, one way) so your reminders show up on your iPhone too.
+- **Menu bar** shows today's next reminder, right next to the bell.
+- **Tells you about updates** so you never miss a new version.
 - **Opens at login** automatically.
 
 Requires macOS 14 Sonoma or later.

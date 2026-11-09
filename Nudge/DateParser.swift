@@ -4,6 +4,7 @@ struct ParsedInput {
     var title: String
     var due: Date?
     var range: NSRange?
+    var repeats: RepeatRule?
 }
 
 enum DateParser {
@@ -21,6 +22,10 @@ enum DateParser {
         pattern: #"\bin\s+(\d+|an?|one)\s+(minutes?|mins?|hours?|hrs?|days?|weeks?)\b"#,
         options: options)
 
+    private static let repeatRegex = try! NSRegularExpression(
+        pattern: #"\b(?:every\s+(day|weekday|week|month|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)|(daily|weekly|monthly))\b"#,
+        options: options)
+
     private static let weekdays: [String: Int] = ["sun": 1, "mon": 2, "tue": 3, "wed": 4, "thu": 5, "fri": 6, "sat": 7]
 
     static func parse(_ text: String, enabled: Bool = true, now: Date = Date()) -> ParsedInput {
@@ -31,6 +36,7 @@ enum DateParser {
         let cal = Calendar.current
         var ranges: [NSRange] = []
         var due: Date?
+        var repeats: RepeatRule?
 
         if let m = relativeRegex.firstMatch(in: text, range: full) {
             let amount = Int(ns.substring(with: m.range(at: 1))) ?? 1
@@ -46,7 +52,31 @@ enum DateParser {
             var day: Date?
             var tonight = false
 
-            if let m = dayRegex.firstMatch(in: text, range: full) {
+            if let m = repeatRegex.firstMatch(in: text, range: full) {
+                let group = m.range(at: 1).location != NSNotFound ? m.range(at: 1) : m.range(at: 2)
+                let word = ns.substring(with: group).lowercased()
+                switch word {
+                case "day", "daily": repeats = .daily
+                case "weekday": repeats = .weekdays
+                case "week", "weekly": repeats = .weekly
+                case "month", "monthly": repeats = .monthly
+                default:
+                    if let weekday = weekdays[String(word.prefix(3))] {
+                        repeats = .weekly
+                        if cal.component(.weekday, from: today) == weekday {
+                            day = today
+                        } else {
+                            var c = DateComponents()
+                            c.weekday = weekday
+                            day = cal.nextDate(after: today, matching: c, matchingPolicy: .nextTime)
+                        }
+                    }
+                }
+                if repeats != nil { ranges.append(m.range) }
+            }
+
+            if day == nil, let m = dayRegex.firstMatch(in: text, range: full),
+               !ranges.contains(where: { NSIntersectionRange($0, m.range).length > 0 }) {
                 let group = m.range(at: 1).location != NSNotFound ? m.range(at: 1) : m.range(at: 2)
                 let word = ns.substring(with: group).lowercased()
                 switch word {
@@ -87,12 +117,19 @@ enum DateParser {
                 }
             }
 
-            if day != nil || hourMinute != nil {
+            if day != nil || hourMinute != nil || repeats != nil {
                 let baseDay = day ?? today
                 let (h, mi) = hourMinute ?? (tonight ? (21, 0) : (9, 0))
                 var date = cal.date(bySettingHour: h, minute: mi, second: 0, of: baseDay)
-                if day == nil, let d = date, d <= now {
-                    date = cal.date(byAdding: .day, value: 1, to: d)
+                if let d = date, d <= now {
+                    if let rule = repeats {
+                        date = rule.next(after: d, calendar: cal)
+                    } else if day == nil {
+                        date = cal.date(byAdding: .day, value: 1, to: d)
+                    }
+                }
+                if let rule = repeats, let d = date {
+                    date = rule.firstOccurrence(onOrAfter: d, calendar: cal)
                 }
                 due = date
             }
@@ -113,6 +150,6 @@ enum DateParser {
 
         let start = ranges.map(\.location).min() ?? 0
         let end = ranges.map { NSMaxRange($0) }.max() ?? 0
-        return ParsedInput(title: title, due: due, range: NSRange(location: start, length: end - start))
+        return ParsedInput(title: title, due: due, range: NSRange(location: start, length: end - start), repeats: repeats)
     }
 }

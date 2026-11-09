@@ -5,8 +5,8 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Nudge copies the reminders you add into Apple Reminders, so they show up on your iPhone too. Nudge never reads or changes your other reminders.</string>
+	<string>Nudge keeps your reminders in sync with one Apple Reminders list, so they show up on your iPhone too. Nudge only reads and changes reminders in the list you pick.</string>
 	<key>NSRemindersUsageDescription</key>
-	<string>Nudge copies the reminders you add into Apple Reminders.</string>
+	<string>Nudge keeps your reminders in sync with one Apple Reminders list.</string>
 </dict>
 </plist>

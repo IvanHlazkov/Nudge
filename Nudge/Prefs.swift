@@ -19,7 +19,7 @@ final class Prefs: ObservableObject {
 
     @Published var morningSummary: Bool { didSet { save(morningSummary, "morningSummary") } }
     @Published var sound: AlertSound { didSet { save(sound.rawValue, "sound") } }
-    @Published var snoozeMinutes: Int { didSet { save(snoozeMinutes, "snoozeMinutes") } }
+    @Published var showNextInMenuBar: Bool { didSet { save(showNextInMenuBar, "showNextInMenuBar") } }
     @Published var spotDates: Bool { didSet { save(spotDates, "spotDates") } }
     @Published var use24h: Bool { didSet { save(use24h, "use24h") } }
     @Published var position: PanelPosition { didSet { save(position.rawValue, "position") } }
@@ -39,7 +39,7 @@ final class Prefs: ObservableObject {
         defaults.register(defaults: [
             "morningSummary": true,
             "sound": AlertSound.standard.rawValue,
-            "snoozeMinutes": 10,
+            "showNextInMenuBar": true,
             "spotDates": true,
             "use24h": false,
             "position": PanelPosition.desktop.rawValue,
@@ -51,7 +51,7 @@ final class Prefs: ObservableObject {
         ])
         morningSummary = defaults.bool(forKey: "morningSummary")
         sound = AlertSound(rawValue: defaults.string(forKey: "sound") ?? "") ?? .standard
-        snoozeMinutes = defaults.integer(forKey: "snoozeMinutes")
+        showNextInMenuBar = defaults.bool(forKey: "showNextInMenuBar")
         spotDates = defaults.bool(forKey: "spotDates")
         use24h = defaults.bool(forKey: "use24h")
         position = PanelPosition(rawValue: defaults.string(forKey: "position") ?? "") ?? .desktop

@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var panel: FloatingPanel!
     private var hotKey: HotKey?
     private var clickAway: ClickAwayWatcher?
+    private var minuteTimer: Timer?
 
     private let desktopLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
 
@@ -29,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         notifications.setUp()
 
         RemindersExporter.shared.store = store
+        RemindersExporter.shared.startWatching()
 
         store.onChange = { [weak self] change in self?.handle(change) }
         prefs.onChange = { [weak self] key in self?.prefChanged(key) }
@@ -47,6 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         clickAway?.start()
 
         notifications.reschedule()
+        startMinuteTimer()
+        UpdateChecker.shared.start()
 
         NotificationCenter.default.addObserver(forName: .NSCalendarDayChanged, object: nil, queue: .main) { [weak self] _ in
             guard let self else { return }
@@ -56,6 +60,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             guard let self else { return }
             Task { @MainActor in self.dayChanged() }
         }
+    }
+
+    private func startMinuteTimer() {
+        let start = Calendar.current.nextDate(after: Date(), matching: DateComponents(second: 0),
+                                              matchingPolicy: .nextTime) ?? Date().addingTimeInterval(60)
+        let timer = Timer(fire: start, interval: 60, repeats: true) { [weak self] _ in
+            self?.store.tick()
+        }
+        timer.tolerance = 2
+        RunLoop.main.add(timer, forMode: .common)
+        minuteTimer = timer
     }
 
     private func buildPanel() {
@@ -85,6 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func showPanel(focus: Bool) {
+        RemindersExporter.shared.schedulePull()
         panel.level = .floating
         panel.orderFrontRegardless()
         panel.makeKey()
@@ -127,6 +143,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private func handle(_ change: ReminderStore.Change) {
         NotificationManager.shared.reschedule()
+        guard !store.syncing else { return }
         let exporter = RemindersExporter.shared
         switch change {
         case .added(let r), .updated(let r): exporter.export(r)
@@ -137,14 +154,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func prefChanged(_ key: String) {
         switch key {
         case "position": applyLevel()
-        case "sound", "morningSummary", "use24h", "snoozeMinutes": NotificationManager.shared.reschedule()
+        case "sound", "morningSummary", "use24h": NotificationManager.shared.reschedule()
         case "remindersListID": RemindersExporter.shared.exportAll()
         default: break
         }
     }
 
     private func dayChanged() {
-        store.refreshToday()
+        store.tick()
+        RemindersExporter.shared.schedulePull()
         NotificationManager.shared.reschedule()
     }
 }

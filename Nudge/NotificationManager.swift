@@ -21,15 +21,32 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     private func updateCategories() {
-        let snooze = UNNotificationAction(identifier: "SNOOZE", title: "Snooze \(snoozeLabel)", options: [])
         let done = UNNotificationAction(identifier: "DONE", title: "Mark done", options: [])
-        let category = UNNotificationCategory(identifier: categoryID, actions: [snooze, done],
+        let tenMinutes = UNNotificationAction(identifier: "SNOOZE_10", title: "Snooze 10 min", options: [])
+        let oneHour = UNNotificationAction(identifier: "SNOOZE_60", title: "Snooze 1 hour", options: [])
+        let tomorrow = UNNotificationAction(identifier: "SNOOZE_TOMORROW", title: "Tomorrow", options: [])
+        let category = UNNotificationCategory(identifier: categoryID,
+                                              actions: [done, tenMinutes, oneHour, tomorrow],
                                               intentIdentifiers: [], options: [])
         center.setNotificationCategories([category])
     }
 
-    private var snoozeLabel: String {
-        prefs.snoozeMinutes >= 60 ? "1 h" : "\(prefs.snoozeMinutes) min"
+    private func snoozeDate(for action: String, due: Date?) -> Date? {
+        let now = Date()
+        let cal = Calendar.current
+        switch action {
+        case "SNOOZE_10":
+            return now.addingTimeInterval(10 * 60)
+        case "SNOOZE_60":
+            return now.addingTimeInterval(60 * 60)
+        case "SNOOZE_TOMORROW":
+            guard let tomorrow = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: now)) else { return nil }
+            let hour = due.map { cal.component(.hour, from: $0) } ?? 9
+            let minute = due.map { cal.component(.minute, from: $0) } ?? 0
+            return cal.date(bySettingHour: hour, minute: minute, second: 0, of: tomorrow)
+        default:
+            return nil
+        }
     }
 
     func reschedule() {
@@ -103,12 +120,16 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             if let id {
                 DispatchQueue.main.async { [weak self] in self?.store?.setDone(id, true) }
             }
-        case "SNOOZE":
-            if let content = request.content.mutableCopy() as? UNMutableNotificationContent {
-                let seconds = TimeInterval(max(1, prefs.snoozeMinutes) * 60)
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
-                center.add(UNNotificationRequest(identifier: snoozePrefix + UUID().uuidString,
-                                                 content: content, trigger: trigger))
+        case "SNOOZE_10", "SNOOZE_60", "SNOOZE_TOMORROW":
+            let action = response.actionIdentifier
+            if let id {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, let store = self.store else { return }
+                    let due = store.reminder(id)?.due
+                    if let date = self.snoozeDate(for: action, due: due) {
+                        store.snooze(id, until: date)
+                    }
+                }
             }
         default:
             onOpen?()

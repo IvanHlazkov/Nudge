@@ -39,8 +39,8 @@ struct MainView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Circle().fill(Theme.green).frame(width: 7, height: 7)
-                        Text("Sending to Reminders")
-                        Image(systemName: "arrow.up.right")
+                        Text("Synced with Reminders")
+                        Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 10, weight: .bold))
                     }
                     .font(.system(size: 12, weight: .medium))
@@ -50,7 +50,7 @@ struct MainView: View {
                     .background(Capsule().fill(Color.white.opacity(0.08)))
                 }
                 .buttonStyle(.plain)
-                .help("New reminders are copied to Apple Reminders")
+                .help("Your reminders stay in sync with Apple Reminders")
             }
             Button {
                 ui.showSettings = true
@@ -83,7 +83,8 @@ struct MainView: View {
     private var hint: String {
         if text.trimmingCharacters(in: .whitespaces).isEmpty { return "Press enter to save" }
         if let due = parsed.due {
-            return "Save to Planned · \(Fmt.dayLabel(due)), \(Fmt.time(due, use24h: prefs.use24h))"
+            let repeats = parsed.repeats.map { " · " + $0.label.lowercased() } ?? ""
+            return "Save to Planned · \(Fmt.dayLabel(due)), \(Fmt.time(due, use24h: prefs.use24h))" + repeats
         }
         return "Save to General"
     }

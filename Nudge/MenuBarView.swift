@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarView: View {
     @EnvironmentObject var store: ReminderStore
     @EnvironmentObject var prefs: Prefs
+    @EnvironmentObject var updates: UpdateChecker
     @State private var text = ""
 
     private struct Entry: Identifiable {
@@ -78,6 +79,19 @@ struct MenuBarView: View {
                     store.quickAdd(text, spotDates: prefs.spotDates, generalDay: store.today)
                     text = ""
                 }
+
+            if let update = updates.available {
+                Button {
+                    updates.openDownload()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.down.circle.fill")
+                        Text("Nudge \(update.version) is out · Download")
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                }
+            }
 
             Divider()
 

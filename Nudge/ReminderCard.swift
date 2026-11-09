@@ -198,12 +198,20 @@ struct ReminderRow: View {
             }
 
             if showTime, let due = reminder.due {
-                Text(Fmt.time(due, use24h: prefs.use24h))
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.dateText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(Theme.dateBackground))
+                HStack(spacing: 4) {
+                    if let rule = reminder.repeats {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 9, weight: .bold))
+                            .help(rule.label)
+                            .accessibilityLabel(rule.label)
+                    }
+                    Text(Fmt.time(due, use24h: prefs.use24h))
+                }
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Theme.dateText)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Theme.dateBackground))
             }
         }
         .padding(.horizontal, 4)
@@ -215,6 +223,7 @@ struct ReminderRow: View {
             Button(reminder.done ? "Mark not done" : "Mark done") { store.toggle(reminder.id) }
             if reminder.kind == .planned {
                 Button("Move to next day") { store.move(reminder.id, byDays: 1) }
+                Button("Snooze 1 hour") { store.snooze(reminder.id, until: Date().addingTimeInterval(3600)) }
             }
             Divider()
             Button("Delete", role: .destructive) { store.delete(reminder.id) }
@@ -231,6 +240,7 @@ struct ReminderEditor: View {
     @State private var title: String
     @State private var hasTime: Bool
     @State private var due: Date
+    @State private var repeats: RepeatRule?
     @State private var closed = false
     @FocusState private var titleFocused: Bool
 
@@ -240,6 +250,7 @@ struct ReminderEditor: View {
         _title = State(initialValue: reminder.title)
         _hasTime = State(initialValue: reminder.due != nil)
         _due = State(initialValue: reminder.due ?? Self.nextHour())
+        _repeats = State(initialValue: reminder.repeats)
     }
 
     private static func nextHour() -> Date {
@@ -278,9 +289,23 @@ struct ReminderEditor: View {
             }
 
             HStack(spacing: 6) {
-                Text(hasTime ? "Goes to Planned" : "Goes to General")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.secondary)
+                if hasTime {
+                    Picker("Repeat", selection: $repeats) {
+                        Text("Doesn't repeat").tag(RepeatRule?.none)
+                        ForEach(RepeatRule.allCases) { rule in
+                            Text(rule.label).tag(RepeatRule?.some(rule))
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .controlSize(.small)
+                    .fixedSize()
+                    .help("Repeat")
+                } else {
+                    Text("Goes to General")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.secondary)
+                }
                 Spacer()
                 Button("Cancel", action: close)
                     .buttonStyle(HoverButtonStyle())
@@ -314,7 +339,7 @@ struct ReminderEditor: View {
     private func save() {
         guard canSave, !closed else { return }
         let newDue: Date? = hasTime ? due : nil
-        store.edit(reminder.id, title: title, due: newDue)
+        store.edit(reminder.id, title: title, due: newDue, repeats: hasTime ? repeats : nil)
         if let newDue { ui.plannedOffset = store.offset(of: newDue) }
         close()
     }

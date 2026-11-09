@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var prefs: Prefs
     @EnvironmentObject var ui: UIState
+    @ObservedObject private var updates = UpdateChecker.shared
 
     @State private var lists: [ReminderList] = []
     @State private var remindersDenied = false
@@ -44,6 +45,15 @@ struct SettingsView: View {
 
             HStack {
                 Text("Nudge \(version)")
+                if let update = updates.available {
+                    Button("Nudge \(update.version) is out · Download") { updates.openDownload() }
+                        .buttonStyle(.link)
+                        .foregroundStyle(Theme.accent)
+                } else {
+                    Button("Check for updates") { updates.check() }
+                        .buttonStyle(.link)
+                        .foregroundStyle(Theme.secondary)
+                }
                 Spacer()
                 Text("Made by Glaz Labs")
             }
@@ -72,13 +82,9 @@ struct SettingsView: View {
                     Text("None").tag(AlertSound.silent)
                 }
             }
-            LabeledPicker(title: "Snooze for") {
-                Picker("Snooze for", selection: $prefs.snoozeMinutes) {
-                    Text("10 min").tag(10)
-                    Text("30 min").tag(30)
-                    Text("1 h").tag(60)
-                }
-            }
+            ToggleRow(title: "Next up in menu bar",
+                      subtitle: "Shows today's next reminder",
+                      isOn: $prefs.showNextInMenuBar)
         }
     }
 
@@ -150,7 +156,7 @@ struct SettingsView: View {
         HStack(spacing: 16) {
             RemindersGlyph()
             VStack(alignment: .leading, spacing: 3) {
-                Text("Send to Apple Reminders")
+                Text("Sync with Apple Reminders")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)
                 HStack(spacing: 6) {
@@ -177,12 +183,12 @@ struct SettingsView: View {
                 Button {
                     RemindersExporter.shared.exportAll()
                 } label: {
-                    Label("Send all now", systemImage: "arrow.up.right")
+                    Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
                         .font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(HoverButtonStyle())
             }
-            Toggle("Send to Apple Reminders", isOn: Binding(
+            Toggle("Sync with Apple Reminders", isOn: Binding(
                 get: { prefs.sendToReminders },
                 set: { on in setSendToReminders(on) }))
                 .toggleStyle(.switch)
@@ -200,15 +206,15 @@ struct SettingsView: View {
             return "No access. Allow Nudge in System Settings › Privacy & Security › Reminders."
         }
         guard prefs.sendToReminders else {
-            return "Copy what you add in Nudge into Reminders. Nothing comes back."
+            return "Two-way: changes on your iPhone or in Reminders come back to Nudge."
         }
         if let last = prefs.lastSent {
             let ago = Date().timeIntervalSince(last) < 60
                 ? "just now"
                 : RelativeDateTimeFormatter().localizedString(for: last, relativeTo: Date())
-            return "Last sent \(ago) · one way: Nudge → Reminders"
+            return "Last synced \(ago) · two-way with Reminders"
         }
-        return "Ready · one way: Nudge → Reminders"
+        return "Ready · two-way with Reminders"
     }
 
     private func setSendToReminders(_ on: Bool) {
