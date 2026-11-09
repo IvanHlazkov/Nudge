@@ -8,31 +8,39 @@ struct LeftTabs: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            tab("General", .general)
-            tab("Notes", .notes)
+            Menu {
+                Picker("Show", selection: $ui.leftTab) {
+                    Label("General", systemImage: "checklist").tag(LeftTab.general)
+                    Label("Notes", systemImage: "note.text").tag(LeftTab.notes)
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } label: {
+                HStack(spacing: 5) {
+                    Text(ui.leftTab == .notes ? "Notes" : "General")
+                        .font(.system(size: 13, weight: .bold))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Theme.secondary)
+                }
+                .foregroundStyle(Theme.text)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.white.opacity(0.12)))
+                .contentShape(Capsule())
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Switch between General and Notes")
+
             Text("· " + subtitle)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(Theme.secondary)
                 .lineLimit(1)
                 .padding(.leading, 2)
         }
-    }
-
-    private func tab(_ title: String, _ value: LeftTab) -> some View {
-        let active = ui.leftTab == value
-        return Button {
-            ui.leftTab = value
-        } label: {
-            Text(title)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(active ? Theme.text : Color(white: 0.62))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(active ? Color.white.opacity(0.12) : Color.clear))
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(active ? .isSelected : [])
     }
 }
 
@@ -53,7 +61,7 @@ struct NotesCard: View {
                         Text("No notes yet")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(Color(white: 0.77))
-                        Text("Press ⇥ Tab in the box above to write one")
+                        Text("Press ⌃N to write one")
                             .font(.system(size: 12))
                             .foregroundStyle(Theme.secondary)
                     }

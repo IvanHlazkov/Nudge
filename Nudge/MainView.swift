@@ -73,8 +73,7 @@ struct MainView: View {
     private var quickAdd: some View {
         HStack(spacing: 12) {
             Button {
-                ui.noteMode.toggle()
-                ui.focusToken += 1
+                ui.toggleNoteMode()
             } label: {
                 Image(systemName: ui.noteMode ? "note.text" : "bell")
                     .font(.system(size: 13, weight: .semibold))
@@ -83,15 +82,14 @@ struct MainView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help(ui.noteMode ? "Writing a note · Tab for a reminder" : "Writing a reminder · Tab for a note")
+            .help(ui.noteMode ? "Writing a note · ⌃N for a reminder" : "Writing a reminder · ⌃N for a note")
             .accessibilityLabel(ui.noteMode ? "Switch to reminder" : "Switch to note")
 
             QuickAddField(text: $text,
                           focusToken: ui.focusToken,
                           highlight: ui.noteMode ? nil : parsed.range,
                           noteMode: ui.noteMode,
-                          onSubmit: submit,
-                          onTab: { ui.noteMode.toggle() })
+                          onSubmit: submit)
             Text(hint)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color(white: 0.9))
@@ -105,7 +103,7 @@ struct MainView: View {
 
     private var hint: String {
         if text.trimmingCharacters(in: .whitespaces).isEmpty {
-            return ui.noteMode ? "⇥ Tab for a reminder" : "⇥ Tab for a note"
+            return ui.noteMode ? "⌃N for a reminder" : "⌃N for a note"
         }
         if ui.noteMode { return "↵ Save to Notes" }
         return "↵ " + reminderHint

@@ -70,4 +70,11 @@ final class UIState: ObservableObject {
     @Published var noteMode = false
     @Published var focusToken = 0
     @Published var plannedOffset = 0
+
+    func toggleNoteMode() {
+        noteMode.toggle()
+        leftTab = noteMode ? .notes : .general
+        showSettings = false
+        focusToken += 1
+    }
 }

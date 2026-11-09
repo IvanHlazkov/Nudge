@@ -7,7 +7,6 @@ struct QuickAddField: NSViewRepresentable {
     var highlight: NSRange?
     var noteMode = false
     var onSubmit: () -> Void
-    var onTab: () -> Void = {}
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -84,10 +83,6 @@ struct QuickAddField: NSViewRepresentable {
         func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
             if selector == #selector(NSResponder.insertNewline(_:)) {
                 parent.onSubmit()
-                return true
-            }
-            if selector == #selector(NSResponder.insertTab(_:)) || selector == #selector(NSResponder.insertBacktab(_:)) {
-                parent.onTab()
                 return true
             }
             if selector == #selector(NSResponder.cancelOperation(_:)) {

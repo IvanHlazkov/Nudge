@@ -13,7 +13,7 @@ Nudge is a small glass panel that pops up with ⌥Space. Type a reminder, press 
 - **Type naturally:** "Upload homework tomorrow at 10 pm", "gym at 18:30" or "call back in 20 minutes". The date lights up as you type.
 - **Repeating reminders:** "water the plants every day at 8", "team call every monday at 10", "pay rent monthly". Tick one off and the next one appears.
 - **Two-way sync with Apple Reminders** (optional): your reminders show up on your iPhone, Apple Watch and Siri, and anything you change or tick off there comes back to Nudge.
-- **Quick notes:** press Tab in the box to jot down a note instead of a reminder. Notes sit next to General, and you can pin, copy, edit them or turn one into a reminder.
+- **Quick notes:** press **⌃N** to jot down a note instead of a reminder. Notes sit next to General (switch with the pop-down), and you can pin, copy, edit them or turn one into a reminder.
 - **General and Planned:** reminders without a time go to General (one simple list), ones with a time go to Planned (day by day).
 - **Edit anything:** double-click a reminder (or use the pencil) to change its text, date, time and repeat.
 - **Notifications** with Mark done and Snooze (10 min, 1 hour or tomorrow) buttons, plus a 9:00 morning summary.

@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var hotKey: HotKey?
     private var clickAway: ClickAwayWatcher?
     private var minuteTimer: Timer?
+    private var keyMonitor: Any?
 
     private let desktopLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
 
@@ -51,6 +52,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         notifications.reschedule()
         startMinuteTimer()
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === self.panel else { return event }
+            let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if mods == .control, event.charactersIgnoringModifiers?.lowercased() == "n" {
+                UIState.shared.toggleNoteMode()
+                return nil
+            }
+            return event
+        }
         UpdateChecker.shared.start()
 
         NotificationCenter.default.addObserver(forName: .NSCalendarDayChanged, object: nil, queue: .main) { [weak self] _ in
