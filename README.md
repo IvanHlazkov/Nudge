@@ -6,6 +6,12 @@
   <a href="https://github.com/IvanHlazkov/Nudge/releases/latest"><b>⬇️ Download Nudge for Mac</b></a>
 </p>
 
+<p align="center">
+  🔒 <b>Nudge 2.0 is ready and unlocks at 100 ⭐.</b> It brings two-way sync with Apple Reminders (so your iPhone too), repeating reminders and more.<br>
+  Star the repo to help unlock it. It releases automatically when we hit 100.<br><br>
+  <img src="https://img.shields.io/github/stars/IvanHlazkov/Nudge?style=social" alt="GitHub stars">
+</p>
+
 ---
 
 Nudge is a small glass panel that pops up with ⌥Space. Type a reminder, press Enter, done.
