@@ -1,0 +1,96 @@
+name: Release Nudge 2.0 at 100 stars
+
+# Nudge 2.0 waits on the v2 branch. Every time someone stars the repo, this checks the count.
+# At 100 stars it merges v2 into main, builds the app and publishes the v2.0 release by itself.
+# You can also run it by hand from the Actions tab ("Run workflow") to check the count.
+on:
+  watch:
+    types: [started]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-v2
+  cancel-in-progress: false
+
+env:
+  GOAL: 100
+  TAG: v2.0
+  BRANCH: v2
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          stars=$(gh api "repos/$REPO" --jq .stargazers_count)
+          echo "### ⭐ $stars / $GOAL stars" >> "$GITHUB_STEP_SUMMARY"
+          go=false
+          if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
+            echo "$TAG is already out." | tee -a "$GITHUB_STEP_SUMMARY"
+          elif ! gh api "repos/$REPO/branches/$BRANCH" >/dev/null 2>&1; then
+            echo "There's no $BRANCH branch." | tee -a "$GITHUB_STEP_SUMMARY"
+          elif [ "$stars" -ge "$GOAL" ]; then
+            echo "Goal reached, releasing $TAG 🎉" | tee -a "$GITHUB_STEP_SUMMARY"
+            go=true
+          else
+            echo "$((GOAL - stars)) more to go." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: check
+    if: needs.check.outputs.go == 'true'
+    runs-on: macos-15
+    steps:
+      - name: Merge v2 into main
+        id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh api "repos/$REPO/merges" -f base=main -f head="$BRANCH" \
+               -f commit_message="Nudge 2.0 🎉 Thanks for 100 stars" >/dev/null; then
+            ref=main
+          else
+            echo "::warning::Couldn't merge $BRANCH into main, so releasing straight from $BRANCH."
+            ref=$BRANCH
+          fi
+          echo "sha=$(gh api "repos/$REPO/commits/$ref" --jq .sha)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.merge.outputs.sha }}
+
+      - name: Pick Xcode 16
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+
+      - name: Build (Release, ad-hoc signed)
+        run: |
+          xcodebuild -project Nudge.xcodeproj -target Nudge -configuration Release \
+            SYMROOT="$PWD/build" \
+            CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            build | tee build.log | grep -E "error:|warning:|BUILD" || true
+          test -d build/Release/Nudge.app || { tail -80 build.log; exit 1; }
+
+      - name: Zip the app
+        run: ditto -c -k --keepParent build/Release/Nudge.app Nudge-mac.zip
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.merge.outputs.sha }}
+        run: |
+          if [ -f docs/release-notes-2.0.md ]; then notes=(--notes-file docs/release-notes-2.0.md); else notes=(--generate-notes); fi
+          gh release create "$TAG" Nudge-mac.zip --target "$SHA" --title "Nudge 2.0" --latest "${notes[@]}"
