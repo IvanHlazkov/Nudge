@@ -5,6 +5,7 @@ Thank you for 100 stars! This update was ready and waiting for you.
 ### New
 - **Two-way sync with Apple Reminders.** Turn it on in Settings and your reminders show up on your iPhone, Apple Watch and Siri. Edit, tick off or delete something there, and Nudge updates too. Reminders you add to the synced list on your iPhone appear in Nudge.
 - **Repeating reminders.** Type "every day", "every weekday", "every monday", "weekly" or "monthly", or pick a repeat when you edit a reminder. When you tick one off, the next one is created.
+- **Quick notes.** Press **Tab** in the box at the top to write a note instead of a reminder. Notes have their own tab next to General. Pin the important ones, copy them, edit them (they can be several lines long) or turn one into a reminder.
 - **Better snooze.** Notifications now have **Snooze 10 min**, **Snooze 1 hour** and **Tomorrow**, and snoozing actually moves the reminder.
 - **Next up in the menu bar.** Today's next reminder appears next to the bell. You can turn it off in Settings.
 - **Update alerts.** Nudge tells you when a new version is out, in the menu bar and in Settings.

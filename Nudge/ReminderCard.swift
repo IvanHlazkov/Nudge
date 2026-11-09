@@ -15,14 +15,19 @@ struct ReminderCard: View {
         let left = reminders.filter { !$0.done }.count
 
         VStack(alignment: .leading, spacing: 0) {
-            (Text(isPlanned ? "Planned" : "General")
-                .fontWeight(.bold)
-                .foregroundStyle(Theme.text)
-             + Text(isPlanned ? " · reminders with date and time" : " · reminders without date and time")
-                .fontWeight(.medium)
-                .foregroundStyle(Theme.secondary))
-                .font(.system(size: 13))
-                .lineLimit(1)
+            if isPlanned {
+                (Text("Planned")
+                    .fontWeight(.bold)
+                    .foregroundStyle(Theme.text)
+                 + Text(" · reminders with date and time")
+                    .fontWeight(.medium)
+                    .foregroundStyle(Theme.secondary))
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+            } else {
+                LeftTabs(subtitle: "no date and time")
+                    .padding(.leading, -8)
+            }
 
             if isPlanned {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {

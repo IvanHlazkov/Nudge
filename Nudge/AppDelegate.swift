@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static private(set) var shared: AppDelegate!
 
     let store = ReminderStore()
+    let notes = NoteStore()
     let prefs = Prefs.shared
     private var panel: FloatingPanel!
     private var hotKey: HotKey?
@@ -76,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func buildPanel() {
         let root = RootView()
             .environmentObject(store)
+            .environmentObject(notes)
             .environmentObject(prefs)
             .environmentObject(UIState.shared)
         let hosting = NSHostingView(rootView: root)
@@ -106,6 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         panel.makeKey()
         if focus {
             UIState.shared.showSettings = false
+            UIState.shared.noteMode = false
             UIState.shared.focusToken += 1
         }
     }

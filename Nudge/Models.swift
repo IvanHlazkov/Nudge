@@ -58,9 +58,16 @@ struct Reminder: Identifiable, Codable, Equatable {
     var spawnedNext: Bool?
 }
 
+enum LeftTab {
+    case general
+    case notes
+}
+
 final class UIState: ObservableObject {
     static let shared = UIState()
     @Published var showSettings = false
+    @Published var leftTab: LeftTab = .general
+    @Published var noteMode = false
     @Published var focusToken = 0
     @Published var plannedOffset = 0
 }
