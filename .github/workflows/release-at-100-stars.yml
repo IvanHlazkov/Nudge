@@ -51,7 +51,7 @@ jobs:
   release:
     needs: check
     if: needs.check.outputs.go == 'true'
-    runs-on: macos-15
+    runs-on: macos-latest
     steps:
       - name: Merge v2 into main
         id: merge
@@ -72,8 +72,8 @@ jobs:
         with:
           ref: ${{ steps.merge.outputs.sha }}
 
-      - name: Pick Xcode 16
-        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+      - name: Use the newest Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)"
 
       - name: Build (Release, ad-hoc signed)
         run: |
