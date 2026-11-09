@@ -52,6 +52,14 @@ Requires macOS 14 Sonoma or later.
 
 Nudge is free. If you like it, you can support its development with the **Sponsor** button at the top of this page.
 
+## Contributing
+
+Bug reports and ideas are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Found a security problem? See [SECURITY.md](SECURITY.md).
+
+## License
+
+© 2026 Ivan Hlazkov (Glaz Labs). All rights reserved. Nudge is free to download and use, but the code isn't open source. See [LICENSE](LICENSE).
+
 ---
 
 Made by Glaz Labs.
