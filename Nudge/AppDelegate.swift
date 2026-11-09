@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// Owns the floating Nudge panel, the global hotkey, login item and wiring between services.
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static private(set) var shared: AppDelegate!
 
@@ -11,7 +10,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var hotKey: HotKey?
     private var clickAway: ClickAwayWatcher?
 
-    /// Just above the desktop icons: behind normal windows, like a widget.
     private let desktopLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
 
     override init() {
@@ -20,7 +18,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Launch at login: on by default, re-registered on every launch while the setting is on.
         if prefs.openAtLogin { LoginItem.set(true) }
 
         let notifications = NotificationManager.shared
@@ -43,7 +40,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             Task { @MainActor in self.toggle() }
         }
 
-        // Clicking anywhere outside Nudge hides it. ⌥Space or the menu bar bell brings it back.
         clickAway = ClickAwayWatcher { [weak self] in
             guard let self else { return }
             Task { @MainActor in self.clickedAway() }
@@ -61,8 +57,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             Task { @MainActor in self.dayChanged() }
         }
     }
-
-    // MARK: Panel
 
     private func buildPanel() {
         let root = RootView()
@@ -115,7 +109,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         showPanel(focus: false)
     }
 
-    /// ⌥Space: opens Nudge, or closes it if it's already open and in use.
     private func toggle() {
         if panel.isVisible && panel.isKeyWindow {
             hidePanel()
@@ -131,8 +124,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func windowDidResignKey(_ notification: Notification) {
         applyLevel()
     }
-
-    // MARK: Changes
 
     private func handle(_ change: ReminderStore.Change) {
         NotificationManager.shared.reschedule()

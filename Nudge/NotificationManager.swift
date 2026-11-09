@@ -1,8 +1,6 @@
 import Foundation
 import UserNotifications
 
-/// Schedules macOS notifications for Planned reminders and the morning summary,
-/// and handles the Snooze / Mark done buttons on them.
 final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
 
@@ -34,7 +32,6 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         prefs.snoozeMinutes >= 60 ? "1 h" : "\(prefs.snoozeMinutes) min"
     }
 
-    /// Rebuilds every pending notification from the current reminders (snoozes are kept).
     func reschedule() {
         guard let store else { return }
         updateCategories()
@@ -54,7 +51,6 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             let now = Date()
             let cal = Calendar.current
 
-            // Planned reminders (macOS keeps at most 64 pending, so cap it).
             let upcoming = items
                 .filter { $0.kind == .planned && !$0.done && ($0.due ?? .distantPast) > now }
                 .sorted { ($0.due ?? now) < ($1.due ?? now) }
@@ -73,11 +69,9 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
                 self.center.add(UNNotificationRequest(identifier: r.id.uuidString, content: content, trigger: trigger))
             }
 
-            // Morning summary of General reminders at 9:00.
             guard summaryOn else { return }
             guard var next = cal.date(bySettingHour: 9, minute: 0, second: 0, of: now) else { return }
             if next <= now, let tomorrow = cal.date(byAdding: .day, value: 1, to: next) { next = tomorrow }
-            // General reminders have no date, so every open one is included.
             let general = items.filter { $0.kind == .general && !$0.done }
             guard !general.isEmpty else { return }
 
@@ -90,8 +84,6 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             self.center.add(UNNotificationRequest(identifier: "summary", content: content, trigger: trigger))
         }
     }
-
-    // MARK: UNUserNotificationCenterDelegate
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,

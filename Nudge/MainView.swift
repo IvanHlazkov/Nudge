@@ -21,8 +21,6 @@ struct MainView: View {
         }
     }
 
-    // MARK: Header
-
     private var header: some View {
         HStack(spacing: 8) {
             Image("NudgeBell")
@@ -64,8 +62,6 @@ struct MainView: View {
             QuitButton(showsTitle: false)
         }
     }
-
-    // MARK: Quick add
 
     private var quickAdd: some View {
         HStack(spacing: 14) {

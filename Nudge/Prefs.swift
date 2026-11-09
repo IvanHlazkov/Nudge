@@ -2,8 +2,8 @@ import Foundation
 import Combine
 
 enum PanelPosition: String, CaseIterable {
-    case desktop   // sits on the desktop, behind other windows
-    case onTop     // floats above every window
+    case desktop
+    case onTop
 }
 
 enum AlertSound: String, CaseIterable {
@@ -11,7 +11,6 @@ enum AlertSound: String, CaseIterable {
     case silent
 }
 
-/// All settings, saved in UserDefaults. `onChange` reports the key that changed.
 final class Prefs: ObservableObject {
     static let shared = Prefs()
 
@@ -33,7 +32,6 @@ final class Prefs: ObservableObject {
         }
     }
     @Published var sendToReminders: Bool { didSet { save(sendToReminders, "sendToReminders") } }
-    /// Empty string = Nudge's own "Nudge" list.
     @Published var remindersListID: String { didSet { save(remindersListID, "remindersListID") } }
     @Published var lastSent: Date? { didSet { defaults.set(lastSent, forKey: "lastSent") } }
 

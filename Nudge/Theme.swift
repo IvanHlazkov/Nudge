@@ -6,10 +6,10 @@ enum Theme {
     static let secondary = Color(white: 0.78)
     static let card = Color.white.opacity(0.09)
     static let field = Color.white.opacity(0.10)
-    static let accent = Color(red: 1.0, green: 0.608, blue: 0.361)        // #FF9B5C
-    static let dateText = Color(red: 0.867, green: 0.843, blue: 1.0)      // #DDD7FF
+    static let accent = Color(red: 1.0, green: 0.608, blue: 0.361)
+    static let dateText = Color(red: 0.867, green: 0.843, blue: 1.0)
     static let dateBackground = Color(red: 0.59, green: 0.51, blue: 1.0).opacity(0.25)
-    static let green = Color(red: 0.435, green: 0.878, blue: 0.627)       // #6FE0A0
+    static let green = Color(red: 0.435, green: 0.878, blue: 0.627)
 
     static let nsDateText = NSColor(red: 0.867, green: 0.843, blue: 1.0, alpha: 1)
     static let nsDateBackground = NSColor(red: 0.59, green: 0.51, blue: 1.0, alpha: 0.30)

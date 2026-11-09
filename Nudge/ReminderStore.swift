@@ -1,8 +1,6 @@
 import Foundation
 import Combine
 
-/// Keeps every reminder and saves them to ~/Library/Application Support/Nudge/reminders.json
-/// (inside the app's sandbox container).
 final class ReminderStore: ObservableObject {
     enum Change {
         case added(Reminder)
@@ -26,8 +24,6 @@ final class ReminderStore: ObservableObject {
         load()
     }
 
-    // MARK: Days
-
     func refreshToday() {
         let t = cal.startOfDay(for: Date())
         if t != today { today = t }
@@ -41,8 +37,6 @@ final class ReminderStore: ObservableObject {
         cal.dateComponents([.day], from: today, to: cal.startOfDay(for: date)).day ?? 0
     }
 
-    // MARK: Reading
-
     func list(_ kind: ReminderKind, on day: Date) -> [Reminder] {
         items
             .filter { $0.kind == kind && cal.isDate($0.day, inSameDayAs: day) }
@@ -52,8 +46,6 @@ final class ReminderStore: ObservableObject {
             }
     }
 
-    /// Every General reminder. They have no date, so they're shown together:
-    /// open ones first, then in the order they were added.
     func generalList() -> [Reminder] {
         items
             .filter { $0.kind == .general }
@@ -71,8 +63,6 @@ final class ReminderStore: ObservableObject {
         items.first { $0.id == id }
     }
 
-    // MARK: Writing
-
     @discardableResult
     func add(title: String, kind: ReminderKind, day: Date, due: Date?) -> Reminder {
         let r = Reminder(title: title, kind: kind, day: cal.startOfDay(for: day), due: due)
@@ -82,7 +72,6 @@ final class ReminderStore: ObservableObject {
         return r
     }
 
-    /// Adds whatever was typed in a quick-add field. Text with a date/time becomes Planned.
     @discardableResult
     func quickAdd(_ text: String, spotDates: Bool, generalDay: Date) -> Reminder? {
         let parsed = DateParser.parse(text, enabled: spotDates)
@@ -111,13 +100,11 @@ final class ReminderStore: ObservableObject {
         }
     }
 
-    /// Changes the text and/or the date and time. A date and time makes it Planned; none makes it General.
     func edit(_ id: UUID, title: String, due: Date?) {
         let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return }
         let cal = self.cal
         let today = self.today
-        // Drop seconds so notifications fire right on the minute.
         let due = due.flatMap { cal.date(from: cal.dateComponents([.year, .month, .day, .hour, .minute], from: $0)) }
         update(id) { r in
             r.title = title
@@ -140,7 +127,6 @@ final class ReminderStore: ObservableObject {
         onChange?(.removed(removed))
     }
 
-    /// Records the Apple Reminders copy. Does not fire onChange (avoids an export loop).
     func setExportID(_ id: UUID, _ exportID: String?) {
         guard let i = items.firstIndex(where: { $0.id == id }) else { return }
         items[i].exportID = exportID
@@ -153,8 +139,6 @@ final class ReminderStore: ObservableObject {
         persist()
         onChange?(.updated(items[i]))
     }
-
-    // MARK: Disk
 
     private func load() {
         guard let data = try? Data(contentsOf: fileURL) else { return }

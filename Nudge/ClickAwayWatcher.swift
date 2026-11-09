@@ -1,8 +1,5 @@
 import AppKit
 
-/// Notices when you leave Nudge: a click anywhere outside it (the desktop, another app's window,
-/// the Dock, the menu bar) or switching to another app with ⌘Tab. Nudge then hides until ⌥Space.
-/// Uses a global mouse monitor, which needs no Accessibility or Screen Recording permission.
 final class ClickAwayWatcher {
     private var mouseMonitor: Any?
     private var activationObserver: NSObjectProtocol?
@@ -15,12 +12,10 @@ final class ClickAwayWatcher {
     func start() {
         guard mouseMonitor == nil else { return }
 
-        // Global monitors only see clicks that go to OTHER apps, never clicks inside Nudge itself.
         mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
             self?.onClickAway()
         }
 
-        // Switching apps from the keyboard (⌘Tab, Spotlight…) counts as leaving too.
         let myPID = ProcessInfo.processInfo.processIdentifier
         activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main

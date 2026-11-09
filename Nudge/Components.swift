@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 
-/// Real macOS blur behind the panel, with rounded corners.
 struct GlassBackground: NSViewRepresentable {
     var cornerRadius: CGFloat = 20
 
@@ -29,7 +28,6 @@ struct GlassBackground: NSViewRepresentable {
     }
 }
 
-/// Empty areas of the panel can be dragged to move it around the desktop.
 struct WindowDragArea: NSViewRepresentable {
     final class DragView: NSView {
         override var mouseDownCanMoveWindow: Bool { true }
@@ -42,7 +40,6 @@ struct WindowDragArea: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
-/// Flat button that lights up on hover, like the footer buttons in the design.
 struct HoverButtonStyle: ButtonStyle {
     var active = false
 
@@ -81,7 +78,6 @@ struct Keycap: View {
     }
 }
 
-/// Small icon for the Apple Reminders row (coloured dots + lines).
 struct RemindersGlyph: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -105,7 +101,6 @@ struct RemindersGlyph: View {
     }
 }
 
-/// Quits Nudge completely (it stops running until you open it again), e.g. before deleting the app.
 struct QuitButton: View {
     var showsTitle: Bool
 

@@ -1,16 +1,11 @@
 import Foundation
 
 struct ParsedInput {
-    /// The text with the date/time words taken out.
     var title: String
-    /// When the reminder is due. nil means it's a General reminder.
     var due: Date?
-    /// The part of the original text that was read as a date/time (UTF-16 range, for highlighting).
     var range: NSRange?
 }
 
-/// Reads dates and times out of what you type, for example:
-/// "Upload homework tomorrow at 10 pm", "gym at 18:30", "call back in 20 minutes", "dentist on friday at 5pm".
 enum DateParser {
     private static let options: NSRegularExpression.Options = [.caseInsensitive]
 
@@ -38,7 +33,6 @@ enum DateParser {
         var due: Date?
 
         if let m = relativeRegex.firstMatch(in: text, range: full) {
-            // "in 20 minutes", "in an hour", "in 3 days"
             let amount = Int(ns.substring(with: m.range(at: 1))) ?? 1
             let unit = ns.substring(with: m.range(at: 2)).lowercased()
             let component: Calendar.Component =
@@ -85,7 +79,7 @@ enum DateParser {
                     if ampm == "pm" && hour < 12 { hour += 12 }
                     if ampm == "am" && hour == 12 { hour = 0 }
                 } else if hour < 8 {
-                    hour += 12 // "at 6" most likely means 6 pm
+                    hour += 12
                 }
                 if hour <= 23 && minute <= 59 {
                     hourMinute = (hour, minute)
@@ -97,7 +91,6 @@ enum DateParser {
                 let baseDay = day ?? today
                 let (h, mi) = hourMinute ?? (tonight ? (21, 0) : (9, 0))
                 var date = cal.date(bySettingHour: h, minute: mi, second: 0, of: baseDay)
-                // A time with no day that has already passed today means tomorrow.
                 if day == nil, let d = date, d <= now {
                     date = cal.date(byAdding: .day, value: 1, to: d)
                 }

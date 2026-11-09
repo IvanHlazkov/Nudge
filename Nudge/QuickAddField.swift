@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 
-/// Text field that colours the date part of what you type ("tomorrow at 10 pm") purple, live.
 struct QuickAddField: NSViewRepresentable {
     @Binding var text: String
     var focusToken: Int
@@ -79,7 +78,6 @@ struct QuickAddField: NSViewRepresentable {
             return false
         }
 
-        /// Colours the live editor's text. Only changes display attributes, never the text itself.
         func applyHighlight(to field: NSTextField) {
             guard let editor = field.currentEditor() as? NSTextView,
                   let storage = editor.textStorage else { return }

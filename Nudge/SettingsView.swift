@@ -61,8 +61,6 @@ struct SettingsView: View {
         loginNeedsApproval = LoginItem.needsApproval
     }
 
-    // MARK: Cards
-
     private var alertsCard: some View {
         SettingsCard(title: "Alerts") {
             ToggleRow(title: "Morning summary",
@@ -148,8 +146,6 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: Apple Reminders
-
     private var remindersRow: some View {
         HStack(spacing: 16) {
             RemindersGlyph()
@@ -230,8 +226,6 @@ struct SettingsView: View {
         }
     }
 }
-
-// MARK: - Building blocks
 
 private struct SettingsCard<Content: View>: View {
     let title: String
