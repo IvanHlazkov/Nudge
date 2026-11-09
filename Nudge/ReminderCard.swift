@@ -1,44 +1,48 @@
 import SwiftUI
 
-/// One of the two big cards: General (no date/time) or Planned (with date/time).
+/// One of the two big cards: General (no date/time, one list) or Planned (with date/time, day by day).
 struct ReminderCard: View {
     let kind: ReminderKind
+    /// Which day the Planned card shows (ignored by General).
     @Binding var offset: Int
 
     @EnvironmentObject var store: ReminderStore
     @State private var showCalendar = false
 
+    private var isPlanned: Bool { kind == .planned }
     private var day: Date { store.date(offset: offset) }
 
     var body: some View {
-        let reminders = store.list(kind, on: day)
+        let reminders = isPlanned ? store.list(.planned, on: day) : store.generalList()
         let left = reminders.filter { !$0.done }.count
 
         VStack(alignment: .leading, spacing: 0) {
-            (Text(kind == .general ? "General" : "Planned")
+            (Text(isPlanned ? "Planned" : "General")
                 .fontWeight(.bold)
                 .foregroundStyle(Theme.text)
-             + Text(kind == .general ? " · reminders without date and time" : " · reminders with date and time")
+             + Text(isPlanned ? " · reminders with date and time" : " · reminders without date and time")
                 .fontWeight(.medium)
                 .foregroundStyle(Theme.secondary))
                 .font(.system(size: 13))
                 .lineLimit(1)
 
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(Fmt.dayLabel(day))
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                if !reminders.isEmpty {
-                    Text("\(left) left")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.secondary)
+            if isPlanned {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(Fmt.dayLabel(day))
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                    if !reminders.isEmpty {
+                        Text("\(left) left")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.secondary)
+                    }
                 }
+                .padding(.top, 6)
             }
-            .padding(.top, 6)
 
             Group {
                 if reminders.isEmpty {
-                    Text("Nothing planned for this day")
+                    Text(isPlanned ? "Nothing planned for this day" : "No reminders yet")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Color(white: 0.77))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -46,7 +50,7 @@ struct ReminderCard: View {
                     ScrollView {
                         LazyVStack(spacing: 2) {
                             ForEach(reminders) { reminder in
-                                ReminderRow(reminder: reminder, showTime: kind == .planned)
+                                ReminderRow(reminder: reminder, showTime: isPlanned)
                             }
                         }
                     }
@@ -56,11 +60,11 @@ struct ReminderCard: View {
             .frame(maxHeight: .infinity)
             .padding(.top, 8)
 
-            footer
+            if isPlanned { footer }
         }
         .padding(.horizontal, 14)
         .padding(.top, 14)
-        .padding(.bottom, 6)
+        .padding(.bottom, isPlanned ? 6 : 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
         .overlay(alignment: .bottom) {
@@ -126,8 +130,17 @@ struct ReminderRow: View {
     @EnvironmentObject var store: ReminderStore
     @EnvironmentObject var prefs: Prefs
     @State private var hovering = false
+    @State private var editing = false
 
     var body: some View {
+        if editing {
+            ReminderEditor(reminder: reminder) { editing = false }
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
         HStack(spacing: 10) {
             Button {
                 store.toggle(reminder.id)
@@ -154,8 +167,24 @@ struct ReminderRow: View {
                 .foregroundStyle(reminder.done ? Color(white: 0.74) : Theme.text)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { editing = true }
+                .help("Double-click to edit")
 
             if hovering {
+                Button {
+                    editing = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Theme.secondary)
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Edit")
+                .accessibilityLabel("Edit")
+
                 Button {
                     store.delete(reminder.id)
                 } label: {
@@ -184,11 +213,115 @@ struct ReminderRow: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(hovering ? Color.white.opacity(0.05) : Color.clear))
         .onHover { hovering = $0 }
         .contextMenu {
+            Button("Edit…") { editing = true }
             Button(reminder.done ? "Mark not done" : "Mark done") { store.toggle(reminder.id) }
-            Button("Move to next day") { store.move(reminder.id, byDays: 1) }
+            if reminder.kind == .planned {
+                Button("Move to next day") { store.move(reminder.id, byDays: 1) }
+            }
             Divider()
             Button("Delete", role: .destructive) { store.delete(reminder.id) }
         }
+    }
+}
+
+/// Inline editor that replaces a row: change the text, and add, change or remove the date and time.
+struct ReminderEditor: View {
+    let reminder: Reminder
+    let onClose: () -> Void
+
+    @EnvironmentObject var store: ReminderStore
+    @EnvironmentObject var ui: UIState
+    @State private var title: String
+    @State private var hasTime: Bool
+    @State private var due: Date
+    @State private var closed = false
+    @FocusState private var titleFocused: Bool
+
+    init(reminder: Reminder, onClose: @escaping () -> Void) {
+        self.reminder = reminder
+        self.onClose = onClose
+        _title = State(initialValue: reminder.title)
+        _hasTime = State(initialValue: reminder.due != nil)
+        _due = State(initialValue: reminder.due ?? Self.nextHour())
+    }
+
+    /// Default time when adding one to a General reminder: the next full hour.
+    private static func nextHour() -> Date {
+        let cal = Calendar.current
+        let now = Date()
+        let hour = cal.date(bySettingHour: cal.component(.hour, from: now), minute: 0, second: 0, of: now) ?? now
+        return cal.date(byAdding: .hour, value: 1, to: hour) ?? now
+    }
+
+    private var canSave: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField("Reminder", text: $title)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13.5))
+                .padding(.horizontal, 8)
+                .frame(height: 30)
+                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.field))
+                .focused($titleFocused)
+                .onSubmit(save)
+
+            HStack(spacing: 8) {
+                Toggle("Date & time", isOn: $hasTime)
+                    .toggleStyle(.checkbox)
+                    .font(.system(size: 12, weight: .semibold))
+                if hasTime {
+                    DatePicker("Date and time", selection: $due, displayedComponents: [.date, .hourAndMinute])
+                        .datePickerStyle(.field)
+                        .labelsHidden()
+                        .controlSize(.small)
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 6) {
+                Text(hasTime ? "Goes to Planned" : "Goes to General")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.secondary)
+                Spacer()
+                Button("Cancel", action: close)
+                    .buttonStyle(HoverButtonStyle())
+                    .keyboardShortcut(.cancelAction)
+                Button(action: save) {
+                    Text("Save")
+                        .foregroundStyle(Color(white: 0.12))
+                        .padding(.horizontal, 6)
+                        .frame(minHeight: 24)
+                        .background(Capsule().fill(canSave ? Theme.accent : Color(white: 0.5)))
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSave)
+            }
+            .font(.system(size: 12, weight: .semibold))
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.accent.opacity(0.5)))
+        .onAppear {
+            Task { @MainActor in titleFocused = true }
+        }
+    }
+
+    private func close() {
+        guard !closed else { return }
+        closed = true
+        onClose()
+    }
+
+    private func save() {
+        guard canSave, !closed else { return }
+        let newDue: Date? = hasTime ? due : nil
+        store.edit(reminder.id, title: title, due: newDue)
+        // Follow a Planned reminder to its new day so it stays in view.
+        if let newDue { ui.plannedOffset = store.offset(of: newDue) }
+        close()
     }
 }
 

@@ -26,14 +26,14 @@ struct MenuBarView: View {
             return Entry(id: r.id, label: label, title: r.title, highlighted: index == 0)
         }
         if result.count < 4 {
-            let general = store.list(.general, on: store.today).filter { !$0.done }.prefix(4 - result.count)
+            let general = store.generalList().filter { !$0.done }.prefix(4 - result.count)
             result += general.map { Entry(id: $0.id, label: "Anytime", title: $0.title, highlighted: false) }
         }
         return result
     }
 
     private var leftToday: Int {
-        store.list(.general, on: store.today).filter { !$0.done }.count
+        store.generalList().filter { !$0.done }.count
             + store.list(.planned, on: store.today).filter { !$0.done }.count
     }
 

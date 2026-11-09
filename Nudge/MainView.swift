@@ -15,7 +15,7 @@ struct MainView: View {
             header
             quickAdd
             HStack(spacing: 14) {
-                ReminderCard(kind: .general, offset: $ui.generalOffset)
+                ReminderCard(kind: .general, offset: .constant(0))
                 ReminderCard(kind: .planned, offset: $ui.plannedOffset)
             }
         }
@@ -61,6 +61,7 @@ struct MainView: View {
                     .font(.system(size: 13, weight: .semibold))
             }
             .buttonStyle(HoverButtonStyle())
+            QuitButton(showsTitle: false)
         }
     }
 
@@ -92,8 +93,7 @@ struct MainView: View {
     }
 
     private func submit() {
-        let generalDay = store.date(offset: ui.generalOffset)
-        guard let added = store.quickAdd(text, spotDates: prefs.spotDates, generalDay: generalDay) else { return }
+        guard let added = store.quickAdd(text, spotDates: prefs.spotDates, generalDay: store.today) else { return }
         if added.kind == .planned {
             ui.plannedOffset = store.offset(of: added.day)
         }
