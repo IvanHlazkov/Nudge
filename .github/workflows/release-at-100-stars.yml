@@ -1,7 +1,7 @@
 name: Release Nudge 2.0 at 100 stars
 
-# Nudge 2.0 waits on the v2 branch. Every time someone stars the repo, this checks the count.
-# At 100 stars it merges v2 into main, builds the app and publishes the v2.0 release by itself.
+# Nudge 2.0 waits on the nudge-2.0 branch. Every time someone stars the repo, this checks the count.
+# At 100 stars it merges nudge-2.0 into main, builds the app and publishes the v2.0 release by itself.
 # You can also run it by hand from the Actions tab ("Run workflow") to check the count.
 on:
   watch:
@@ -20,7 +20,7 @@ concurrency:
 env:
   GOAL: 100
   TAG: v2.0
-  BRANCH: v2
+  BRANCH: nudge-2.0
 
 jobs:
   check:
