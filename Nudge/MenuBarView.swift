@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The little "Next up" window under the bell in the menu bar.
 struct MenuBarView: View {
     @EnvironmentObject var store: ReminderStore
     @EnvironmentObject var prefs: Prefs

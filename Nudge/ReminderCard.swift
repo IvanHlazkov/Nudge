@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// One of the two big cards: General (no date/time, one list) or Planned (with date/time, day by day).
 struct ReminderCard: View {
     let kind: ReminderKind
-    /// Which day the Planned card shows (ignored by General).
     @Binding var offset: Int
 
     @EnvironmentObject var store: ReminderStore
@@ -224,7 +222,6 @@ struct ReminderRow: View {
     }
 }
 
-/// Inline editor that replaces a row: change the text, and add, change or remove the date and time.
 struct ReminderEditor: View {
     let reminder: Reminder
     let onClose: () -> Void
@@ -245,7 +242,6 @@ struct ReminderEditor: View {
         _due = State(initialValue: reminder.due ?? Self.nextHour())
     }
 
-    /// Default time when adding one to a General reminder: the next full hour.
     private static func nextHour() -> Date {
         let cal = Calendar.current
         let now = Date()
@@ -319,13 +315,11 @@ struct ReminderEditor: View {
         guard canSave, !closed else { return }
         let newDue: Date? = hasTime ? due : nil
         store.edit(reminder.id, title: title, due: newDue)
-        // Follow a Planned reminder to its new day so it stays in view.
         if let newDue { ui.plannedOffset = store.offset(of: newDue) }
         close()
     }
 }
 
-/// The NOV · 2026 calendar that pops up from the calendar button.
 struct MonthPicker: View {
     let kind: ReminderKind
     let selected: Date
@@ -336,7 +330,7 @@ struct MonthPicker: View {
 
     private var cal: Calendar {
         var c = Calendar.current
-        c.firstWeekday = 2 // Monday
+        c.firstWeekday = 2
         return c
     }
 
@@ -347,7 +341,7 @@ struct MonthPicker: View {
 
     private var cells: [Date] {
         let first = month
-        let lead = (cal.component(.weekday, from: first) + 5) % 7 // Monday = 0
+        let lead = (cal.component(.weekday, from: first) + 5) % 7
         let days = cal.range(of: .day, in: .month, for: first)?.count ?? 30
         let total = Int((Double(lead + days) / 7).rounded(.up)) * 7
         return (0..<total).compactMap { cal.date(byAdding: .day, value: $0 - lead, to: first) }

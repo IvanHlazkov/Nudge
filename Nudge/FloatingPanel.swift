@@ -1,6 +1,5 @@
 import AppKit
 
-/// Borderless, transparent panel that can take keyboard focus without activating the app.
 final class FloatingPanel: NSPanel {
     static let autosaveName = "NudgePanel"
 
@@ -24,8 +23,6 @@ final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
-    /// Nudge has no menu bar menus (it lives on the desktop), so wire up the usual
-    /// editing shortcuts by hand: ⌘X ⌘C ⌘V ⌘A ⌘Z ⇧⌘Z.
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         guard let key = event.charactersIgnoringModifiers?.lowercased() else {

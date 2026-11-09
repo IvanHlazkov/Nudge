@@ -1,7 +1,5 @@
 import Carbon.HIToolbox
 
-/// Global ⌥Space shortcut that brings Nudge forward from any app.
-/// Uses Carbon's RegisterEventHotKey, which works in the App Sandbox and needs no Accessibility permission.
 final class HotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
@@ -19,7 +17,7 @@ final class HotKey {
             return OSStatus(noErr)
         }, 1, &spec, me, &handlerRef)
 
-        let id = EventHotKeyID(signature: OSType(0x4E55_4447), id: 1) // "NUDG"
+        let id = EventHotKeyID(signature: OSType(0x4E55_4447), id: 1)
         RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers), id, GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 

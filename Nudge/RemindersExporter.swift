@@ -7,8 +7,6 @@ struct ReminderList: Identifiable, Hashable {
     let title: String
 }
 
-/// One-way copy: Nudge → Apple Reminders. Nothing is ever read back.
-/// Adding, ticking off, editing or deleting in Nudge updates the copy in Apple Reminders.
 final class RemindersExporter {
     static let shared = RemindersExporter()
 
@@ -36,7 +34,6 @@ final class RemindersExporter {
         }
     }
 
-    /// The user's Reminders lists, minus Nudge's own list (shown separately).
     func lists() -> [ReminderList] {
         guard hasAccess else { return [] }
         return eventStore.calendars(for: .reminder)
@@ -53,7 +50,6 @@ final class RemindersExporter {
         if let existing = eventStore.calendars(for: .reminder).first(where: { $0.title == "Nudge" }) {
             return existing
         }
-        // Create a "Nudge" list in the same account as the default list (usually iCloud).
         let list = EKCalendar(for: .reminder, eventStore: eventStore)
         list.title = "Nudge"
         list.cgColor = NSColor(red: 1.0, green: 0.608, blue: 0.361, alpha: 1).cgColor
@@ -75,7 +71,6 @@ final class RemindersExporter {
         if let exportID = reminder.exportID,
            let existing = eventStore.calendarItem(withIdentifier: exportID) as? EKReminder {
             target = existing
-            // The chosen list changed in Settings: move the copy.
             if let calendar = targetCalendar(), existing.calendar.calendarIdentifier != calendar.calendarIdentifier {
                 target.calendar = calendar
             }
@@ -116,7 +111,6 @@ final class RemindersExporter {
         }
     }
 
-    /// "Send all now": copies every Nudge reminder into the chosen list.
     func exportAll() {
         guard prefs.sendToReminders, hasAccess, let store else { return }
         for reminder in store.items {
