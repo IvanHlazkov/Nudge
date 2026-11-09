@@ -104,3 +104,25 @@ struct RemindersGlyph: View {
         }
     }
 }
+
+/// Quits Nudge completely (it stops running until you open it again), e.g. before deleting the app.
+struct QuitButton: View {
+    var showsTitle: Bool
+
+    var body: some View {
+        Button {
+            NSApp.terminate(nil)
+        } label: {
+            if showsTitle {
+                Label("Quit Nudge", systemImage: "power")
+                    .font(.system(size: 13, weight: .semibold))
+            } else {
+                Image(systemName: "power")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+        }
+        .buttonStyle(HoverButtonStyle())
+        .help("Quit Nudge")
+        .accessibilityLabel("Quit Nudge")
+    }
+}

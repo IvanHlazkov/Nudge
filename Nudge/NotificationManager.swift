@@ -77,11 +77,12 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             guard summaryOn else { return }
             guard var next = cal.date(bySettingHour: 9, minute: 0, second: 0, of: now) else { return }
             if next <= now, let tomorrow = cal.date(byAdding: .day, value: 1, to: next) { next = tomorrow }
-            let general = items.filter { $0.kind == .general && !$0.done && cal.isDate($0.day, inSameDayAs: next) }
+            // General reminders have no date, so every open one is included.
+            let general = items.filter { $0.kind == .general && !$0.done }
             guard !general.isEmpty else { return }
 
             let content = UNMutableNotificationContent()
-            content.title = "Good morning · \(general.count) reminder\(general.count == 1 ? "" : "s") today"
+            content.title = "Good morning · \(general.count) reminder\(general.count == 1 ? "" : "s") to do"
             content.body = general.prefix(4).map(\.title).joined(separator: ", ")
             content.sound = playSound ? .default : nil
             let parts = cal.dateComponents([.year, .month, .day, .hour, .minute], from: next)

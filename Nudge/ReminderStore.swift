@@ -52,6 +52,17 @@ final class ReminderStore: ObservableObject {
             }
     }
 
+    /// Every General reminder. They have no date, so they're shown together:
+    /// open ones first, then in the order they were added.
+    func generalList() -> [Reminder] {
+        items
+            .filter { $0.kind == .general }
+            .sorted { a, b in
+                if a.done != b.done { return !a.done }
+                return a.created < b.created
+            }
+    }
+
     func hasOpen(_ kind: ReminderKind, on day: Date) -> Bool {
         items.contains { $0.kind == kind && !$0.done && cal.isDate($0.day, inSameDayAs: day) }
     }
@@ -97,6 +108,28 @@ final class ReminderStore: ObservableObject {
         update(id) { r in
             r.day = cal.date(byAdding: .day, value: days, to: r.day) ?? r.day
             if let due = r.due { r.due = cal.date(byAdding: .day, value: days, to: due) }
+        }
+    }
+
+    /// Changes the text and/or the date and time. A date and time makes it Planned; none makes it General.
+    func edit(_ id: UUID, title: String, due: Date?) {
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return }
+        let cal = self.cal
+        let today = self.today
+        // Drop seconds so notifications fire right on the minute.
+        let due = due.flatMap { cal.date(from: cal.dateComponents([.year, .month, .day, .hour, .minute], from: $0)) }
+        update(id) { r in
+            r.title = title
+            if let due {
+                r.kind = .planned
+                r.due = due
+                r.day = cal.startOfDay(for: due)
+            } else {
+                if r.kind == .planned { r.day = today }
+                r.kind = .general
+                r.due = nil
+            }
         }
     }
 

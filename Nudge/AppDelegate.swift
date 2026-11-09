@@ -9,7 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let prefs = Prefs.shared
     private var panel: FloatingPanel!
     private var hotKey: HotKey?
-    private var desktopClicks: DesktopClickWatcher?
+    private var clickAway: ClickAwayWatcher?
 
     /// Just above the desktop icons: behind normal windows, like a widget.
     private let desktopLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
@@ -40,15 +40,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         hotKey = HotKey { [weak self] in
             guard let self else { return }
-            Task { @MainActor in self.toggleFocus() }
+            Task { @MainActor in self.toggle() }
         }
 
-        // Clicking the desktop hides Nudge. ⌥Space or the menu bar bell brings it back.
-        desktopClicks = DesktopClickWatcher { [weak self] in
+        // Clicking anywhere outside Nudge hides it. ⌥Space or the menu bar bell brings it back.
+        clickAway = ClickAwayWatcher { [weak self] in
             guard let self else { return }
-            Task { @MainActor in self.desktopClicked() }
+            Task { @MainActor in self.clickedAway() }
         }
-        desktopClicks?.start()
+        clickAway?.start()
 
         notifications.reschedule()
 
@@ -105,8 +105,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         panel.orderOut(nil)
     }
 
-    private func desktopClicked() {
-        guard prefs.hideOnDesktopClick, panel.isVisible else { return }
+    private func clickedAway() {
+        guard prefs.hideOnClickAway, panel.isVisible else { return }
         hidePanel()
     }
 
@@ -115,11 +115,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         showPanel(focus: false)
     }
 
-    private func toggleFocus() {
-        if panel.isKeyWindow && panel.isVisible && panel.level == .floating && prefs.position == .desktop {
-            // Second press: send Nudge back down to the desktop.
-            panel.makeFirstResponder(nil)
-            panel.level = desktopLevel
+    /// ⌥Space: opens Nudge, or closes it if it's already open and in use.
+    private func toggle() {
+        if panel.isVisible && panel.isKeyWindow {
+            hidePanel()
         } else {
             showPanel(focus: true)
         }

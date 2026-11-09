@@ -25,7 +25,7 @@ final class Prefs: ObservableObject {
     @Published var use24h: Bool { didSet { save(use24h, "use24h") } }
     @Published var position: PanelPosition { didSet { save(position.rawValue, "position") } }
     @Published var opacity: Double { didSet { save(opacity, "opacity") } }
-    @Published var hideOnDesktopClick: Bool { didSet { save(hideOnDesktopClick, "hideOnDesktopClick") } }
+    @Published var hideOnClickAway: Bool { didSet { save(hideOnClickAway, "hideOnClickAway") } }
     @Published var openAtLogin: Bool {
         didSet {
             LoginItem.set(openAtLogin)
@@ -46,7 +46,7 @@ final class Prefs: ObservableObject {
             "use24h": false,
             "position": PanelPosition.desktop.rawValue,
             "opacity": 0.86,
-            "hideOnDesktopClick": true,
+            "hideOnClickAway": true,
             "openAtLogin": true,
             "sendToReminders": false,
             "remindersListID": ""
@@ -58,7 +58,7 @@ final class Prefs: ObservableObject {
         use24h = defaults.bool(forKey: "use24h")
         position = PanelPosition(rawValue: defaults.string(forKey: "position") ?? "") ?? .desktop
         opacity = defaults.double(forKey: "opacity")
-        hideOnDesktopClick = defaults.bool(forKey: "hideOnDesktopClick")
+        hideOnClickAway = defaults.bool(forKey: "hideOnClickAway")
         openAtLogin = defaults.bool(forKey: "openAtLogin")
         sendToReminders = defaults.bool(forKey: "sendToReminders")
         remindersListID = defaults.string(forKey: "remindersListID") ?? ""

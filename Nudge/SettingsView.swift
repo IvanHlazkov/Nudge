@@ -30,6 +30,8 @@ struct SettingsView: View {
                 Text("Settings")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
+                Spacer()
+                QuitButton(showsTitle: true)
             }
 
             HStack(alignment: .top, spacing: 14) {
@@ -86,7 +88,7 @@ struct SettingsView: View {
         SettingsCard(title: "Quick add") {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Open Nudge").font(.system(size: 13, weight: .semibold))
+                    Text("Open / close Nudge").font(.system(size: 13, weight: .semibold))
                     Text("From any app").font(.system(size: 12)).foregroundStyle(Theme.secondary)
                 }
                 Spacer()
@@ -128,9 +130,9 @@ struct SettingsView: View {
                     .controlSize(.small)
                     .accessibilityLabel("Glass opacity")
             }
-            ToggleRow(title: "Hide when I click the desktop",
+            ToggleRow(title: "Hide when I click away",
                       subtitle: "Bring it back with ⌥Space",
-                      isOn: $prefs.hideOnDesktopClick)
+                      isOn: $prefs.hideOnClickAway)
             ToggleRow(title: "Open at login", subtitle: nil, isOn: Binding(
                 get: { prefs.openAtLogin },
                 set: { on in
