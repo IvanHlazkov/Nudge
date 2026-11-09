@@ -26,8 +26,8 @@ Requires macOS 14 Sonoma or later.
 1. Download **Nudge-mac.zip** from the [latest release](https://github.com/IvanHlazkov/Nudge/releases/latest) and unzip it.
 2. Drag **Nudge.app** into your **Applications** folder.
 3. Open it. The first time, macOS says *"Nudge" Not Opened* because Nudge isn't notarized by Apple yet. This is expected. **Don't click Move to Trash.** Click **Done**, then:
-   1. Open **System Settings › Privacy & Security** (**Ajustes del Sistema › Privacidad y seguridad**).
-   2. Scroll down to **Security**. You'll see *"Nudge" was blocked to protect your Mac*. Click **Open Anyway** (**Abrir igualmente**).
+   1. Open **System Settings › Privacy & Security**.
+   2. Scroll down to **Security**. You'll see *"Nudge" was blocked to protect your Mac*. Click **Open Anyway**.
    3. Enter your password and click **Open Anyway** again.
 
    You only need to do this once.
